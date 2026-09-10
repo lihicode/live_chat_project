@@ -4,39 +4,28 @@ import threading
 import sys
 
 """
-function:
-input:
-output:
+function: client waits for a message from the server
 """
 def wait_for_message():
     while True:
         server_message = client_socket.recv(1024).decode()
-        #like print and enter a line
-        sys.stdout.write(f"\r\033[K{server_message}\n Enter a message to the server: ")
-        #like free the buffer
+        # print and enter a line
+        sys.stdout.write(f"\r\033[K{server_message}\n Send a message: ")
+        #free the buffer
         sys.stdout.flush()
-
-
 """
-function:
-input:
-output:
+function: sends a message to the server
 """
 def send_message():
     while True:
-        client_message = input("Enter a message to the server: \n")
+        client_message = input("Send a message: \n")
         client_socket.send(client_message.encode())
+        if client_message == "/quit":
+            client_socket.close()
 
-# Create a socket object
 client_socket = socket.socket()
-
-# Define the port on which you want to connect
 port = 12345
-
-# connect to the server on local computer
 client_socket.connect(('127.0.0.1', port))
-#client_socket.send("/new".encode())
-print(client_socket)
 
 # receive data from the server and decoding to get the string.
 print (client_socket.recv(1024).decode())

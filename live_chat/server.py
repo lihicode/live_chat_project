@@ -3,9 +3,8 @@ import socket
 import threading
 
 """
-function:
-input:
-output:
+function: extracts the indexes of the client list and converts them to string
+input: client list
 """
 # func that returns a list of ip and port connections
 def addr_extractor(client_list):
@@ -16,20 +15,17 @@ def addr_extractor(client_list):
     return return_string
 
 """
-function:
-input:
-output:
+function: lets the client choosse a friend to send messages to
+input: client socket
 """
 #func that lets the client choose a client to talk to
 def choose_friend(client):
-    client.send((" choose a friend from the list or \n" + addr_extractor(client_list)).encode())
+    client.send((" choose a friend from the list: \n" + addr_extractor(client_list)).encode())
     chosen_index = int(client.recv(1024).decode())
     return client_list[chosen_index][0]
 
 """
-function:
-input:
-output:
+function: updates the list of clients every time a client connects or disconnects
 """
 def client_updater():
     updated_client_list = addr_extractor(client_list)
@@ -38,29 +34,30 @@ def client_updater():
         client[0].send(("updated client list: " + updated_client_list).encode())
 
 """
-function:
-input:
-output:
+function: sends and receives messages from the client
+input: client socket + client ip and port
 """
-# func that sends and receives messages from the client
 def user_handler(client, addr):
-    # send a message to the client. encoding to send byte type.
+    #encoding to send byte type.
     client.send('Thank you for connecting'.encode())
-    client.send(''.encode())
     try:
         while True:
             chosen_client = choose_friend(client)
             client.send("Friend selected. You can start chatting".encode())
             while True:
-                #print("this is the client list for the server's eyes only:", addr_extractor(client_list))
                 msg = (client.recv(1024).decode())
                 if msg == "/exit":
                     client.send("You left the chat. Choose another friend.".encode())
-                    client.send(("choose a friend from the list: \n" + addr_extractor(client_list)).encode())
+                    client.send(("Choose a friend from the list: \n" + addr_extractor(client_list)).encode())
                     break
                 if msg == "/quit":
-
-                msg = f'message from friend: {msg}'
+                    client.send("Goodbye!".encode())
+                    chosen_client.send("Your friend disconnected. Type /exit to choose another friend.".encode())
+                    client_list.remove((client, addr))
+                    client_updater()
+                    client.close()
+                    return
+                msg = f'Message from friend: {msg}'
                 print(msg)
                 chosen_client.send(msg.encode())
     except:
@@ -68,23 +65,18 @@ def user_handler(client, addr):
         print("this is it:", client_list)
         client_updater()
 
-
-# next create a socket object
+#socket creation, binding to the chosen port and listening
 server_socket = socket.socket()
 print("Socket successfully created")
-# reserve a port on your computer
 port = 12345
-#binds the socket
 server_socket.bind(('', port))
 print("socket binded to %s" % port)
-# put the socket into listening mode
 server_socket.listen(5)
 print("socket is listening")
 
 client_list = []
-
 while True:
-    # Establish connection with client.
+    # connection with client
     client_socket, addr = server_socket.accept()
     print('Got connection from', addr)
     # adding to the client list the ip and port of the new connection
