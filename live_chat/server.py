@@ -58,6 +58,8 @@ def user_handler(client, addr):
                     client.send("You left the chat. Choose another friend.".encode())
                     client.send(("choose a friend from the list: \n" + addr_extractor(client_list)).encode())
                     break
+                if msg == "/quit":
+
                 msg = f'message from friend: {msg}'
                 print(msg)
                 chosen_client.send(msg.encode())
